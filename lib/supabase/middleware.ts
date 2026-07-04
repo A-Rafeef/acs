@@ -34,9 +34,12 @@ export async function updateSession(request: NextRequest) {
   }
 
   // 2. Normal Supabase Session handling
+  const clientUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const clientKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    clientUrl,
+    clientKey!,
     {
       cookies: {
         getAll() {
