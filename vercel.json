@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/archive-sold",
+      "schedule": "0 2 * * *"
+    }
+  ]
+}

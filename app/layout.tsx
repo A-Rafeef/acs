@@ -1,0 +1,52 @@
+import type { Metadata } from 'next'
+import { Geist, Geist_Mono } from 'next/font/google'
+import './globals.css'
+import QueryProvider from '@/components/providers/QueryProvider'
+import { ThemeProvider } from '@/components/providers/ThemeProvider'
+import Header from '@/components/layout/Header'
+import Footer from '@/components/layout/Footer'
+import BagDrawer from '@/components/bag/BagDrawer'
+import CommandPalette from '@/components/search/CommandPalette'
+import { Toaster } from 'sonner'
+
+const geistSans = Geist({
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+})
+
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+})
+
+export const metadata: Metadata = {
+  title: 'Minimalist Thrift Store | 1-of-1 Curated Sustainable Fashion',
+  description: 'Shop premium curated second-hand pieces. Fast WhatsApp checkout, unique 1-of-1 inventory logic, sustainable fashion.',
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
+  return (
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-200">
+        <QueryProvider>
+          <ThemeProvider>
+            <Header />
+            <main className="flex-grow flex flex-col">{children}</main>
+            <Footer />
+            <BagDrawer />
+            <CommandPalette />
+            <Toaster position="bottom-right" />
+          </ThemeProvider>
+        </QueryProvider>
+      </body>
+    </html>
+  )
+}
