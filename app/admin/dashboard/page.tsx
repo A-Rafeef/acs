@@ -56,7 +56,7 @@ export default async function AdminDashboardPage() {
     reservedProducts = reservedRes.count || 0
     availableProducts = availableRes.count || 0
     waitlistCount = waitlistRes.count || 0
-    totalViews = viewsRes.data?.reduce((sum, item) => sum + (item.view_count || 0), 0) || 0
+    totalViews = viewsRes.data?.reduce((sum: number, item: any) => sum + (item.view_count || 0), 0) || 0
 
     productsWithCategoriesRes.data?.forEach((row: any) => {
       const catName = row.category?.name || 'Uncategorized'

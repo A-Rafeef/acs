@@ -35,7 +35,7 @@ export async function GET(request: Request) {
       })
     }
 
-    const productIds = productsToArchive.map((p) => p.id)
+    const productIds = productsToArchive.map((p: any) => p.id)
     
     // Extract R2 file keys
     const r2Keys: string[] = []

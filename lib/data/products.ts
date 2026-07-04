@@ -333,7 +333,7 @@ export async function getSimilarProducts(
   }
 
   // Otherwise, fetch additional items in the same category (regardless of size) to fill the limit
-  const excludedIds = [currentProductId, ...(firstPass || []).map(p => p.id)]
+  const excludedIds = [currentProductId, ...(firstPass || []).map((p: any) => p.id)]
   const remainingLimit = limit - (firstPass || []).length
 
   // Build the list of excluded UUIDs formatted as a comma separated string for PostgreSQL 'in' filter
