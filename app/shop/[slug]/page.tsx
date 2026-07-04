@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title,
       description,
-      type: 'music.song', // standard is website or article, let's keep it simple: website
+      type: 'website',
       images: primaryImage ? [{ url: primaryImage }] : [],
     },
     twitter: {

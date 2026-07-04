@@ -172,10 +172,23 @@ export async function updateProductAction(id: string, data: ProductFormData) {
         size: data.size || null,
         color: data.color || null,
         status: data.status,
-        sold_at: data.status === 'sold' ? new Date().toISOString() : null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
+
+    // Only set sold_at if status is being changed to 'sold' and it wasn't already sold
+    if (data.status === 'sold') {
+      await supabase
+        .from('products')
+        .update({ sold_at: new Date().toISOString() })
+        .eq('id', id)
+        .is('sold_at', null)
+    } else {
+      await supabase
+        .from('products')
+        .update({ sold_at: null })
+        .eq('id', id)
+    }
 
     if (productError) {
       console.error('DB Product Update Error:', productError)

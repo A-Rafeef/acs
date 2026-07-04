@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
-import QueryProvider from '@/components/providers/QueryProvider'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
@@ -35,17 +34,34 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var saved = localStorage.getItem('theme');
+                  var isDark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                  if (isDark) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {}
+              })();
+            `
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-200">
-        <QueryProvider>
-          <ThemeProvider>
-            <Header />
-            <main className="flex-grow flex flex-col">{children}</main>
-            <Footer />
-            <BagDrawer />
-            <CommandPalette />
-            <Toaster position="bottom-right" />
-          </ThemeProvider>
-        </QueryProvider>
+        <ThemeProvider>
+          <Header />
+          <main className="flex-grow flex flex-col">{children}</main>
+          <Footer />
+          <BagDrawer />
+          <CommandPalette />
+          <Toaster position="bottom-right" />
+        </ThemeProvider>
       </body>
     </html>
   )

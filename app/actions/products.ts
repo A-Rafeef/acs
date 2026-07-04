@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { isMockMode, readMockDb, writeMockDb } from '@/lib/data/mock-engine'
 
+import { searchProducts } from '@/lib/data/products'
+
 export async function incrementProductViewsAction(productId: string) {
   try {
     if (isMockMode()) {
@@ -24,3 +26,14 @@ export async function incrementProductViewsAction(productId: string) {
     return { success: false, error: err.message }
   }
 }
+
+export async function searchProductsAction(queryText: string) {
+  try {
+    const data = await searchProducts(queryText)
+    return { success: true, data }
+  } catch (err: any) {
+    console.error('Search action failed:', err)
+    return { success: false, error: err.message || 'Search execution failed' }
+  }
+}
+

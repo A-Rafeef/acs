@@ -1,5 +1,5 @@
 import { type MetadataRoute } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicServerClient } from '@/lib/supabase/server'
 import { isMockMode, readMockDb } from '@/lib/data/mock-engine'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }))
   } else {
     try {
-      const supabase = await createClient()
+      const supabase = createPublicServerClient()
       const { data: products } = await supabase
         .from('products')
         .select('slug, updated_at')

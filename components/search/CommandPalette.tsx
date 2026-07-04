@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Search, X, Loader2, ArrowRight } from 'lucide-react'
 import { useUIStore } from '@/store/useUIStore'
-import { createClient } from '@/lib/supabase/client'
 import { type Product } from '@/types'
 import { AnimatePresence, motion } from 'framer-motion'
+import { searchProductsAction } from '@/app/actions/products'
 
 export default function CommandPalette() {
   const router = useRouter()
@@ -16,7 +16,6 @@ export default function CommandPalette() {
   const [results, setResults] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  const supabase = createClient()
 
   // Toggle command palette on Ctrl+K / Cmd+K
   useEffect(() => {
@@ -42,7 +41,7 @@ export default function CommandPalette() {
     }
   }, [searchOpen])
 
-  // Debounced search query
+  // Debounced search query via server action
   useEffect(() => {
     if (!query.trim()) {
       setResults([])
@@ -52,29 +51,22 @@ export default function CommandPalette() {
     setLoading(true)
     const delayDebounceFn = setTimeout(async () => {
       try {
-        const { data, error } = await supabase
-          .from('products')
-          .select(`
-            *,
-            category:categories(*),
-            brand:brands(*),
-            images:product_images(*)
-          `)
-          .in('status', ['available', 'reserved', 'sold'])
-          .textSearch('search_vector', query.trim().split(/\s+/).join(' & '), { type: 'websearch' })
-          .limit(6)
-
-        if (error) throw error
-        setResults(data as Product[] || [])
+        const res = await searchProductsAction(query.trim())
+        if (res.success && res.data) {
+          setResults(res.data)
+        } else {
+          setResults([])
+        }
       } catch (err) {
         console.error('FTS Search Error:', err)
+        setResults([])
       } finally {
         setLoading(false)
       }
     }, 300)
 
     return () => clearTimeout(delayDebounceFn)
-  }, [query, supabase])
+  }, [query])
 
   const handleSelectProduct = (slug: string) => {
     setSearchOpen(false)
@@ -152,7 +144,7 @@ export default function CommandPalette() {
                       >
                         <div className="flex items-center space-x-3 min-w-0">
                           {primaryImage && (
-                            <div className="relative h-12 w-10 overflow-hidden bg-secondary rounded flex-shrink-0">
+                            <div className="relative h-12 w-10 overflow-hidden bg-secondary rounded-sm flex-shrink-0">
                               <Image
                                 src={primaryImage.url}
                                 alt={product.title}

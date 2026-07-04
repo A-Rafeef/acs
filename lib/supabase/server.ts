@@ -90,3 +90,31 @@ export async function createAdminClient() {
     }
   )
 }
+// Client for public operations that do not read cookies (prevents static build dynamic rendering errors)
+export function createPublicServerClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+
+  if (!url || !key) {
+    return {
+      from: () => ({
+        select: () => ({
+          in: () => Promise.resolve({ data: [], error: null })
+        })
+      })
+    } as any
+  }
+
+  return createServerClient(
+    url,
+    key,
+    {
+      cookies: {
+        getAll() {
+          return []
+        },
+        setAll() {},
+      },
+    }
+  )
+}

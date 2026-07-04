@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { type Product, type ProductStatus } from '@/types'
+import { type Product, type ProductStatus, type Category, type Brand } from '@/types'
 import { isMockMode, readMockDb } from './mock-engine'
 
 export interface ProductFilters {
@@ -18,55 +18,55 @@ export async function getProducts(filters?: ProductFilters): Promise<Product[]> 
     const db = readMockDb()
     
     // Perform simulated joins
-    let result = db.products.map((p: any) => ({
+    let result = db.products.map((p: Product) => ({
       ...p,
-      category: db.categories.find((c: any) => c.id === p.category_id) || null,
-      brand: db.brands.find((b: any) => b.id === p.brand_id) || null
+      category: db.categories.find((c: Category) => c.id === p.category_id) || null,
+      brand: db.brands.find((b: Brand) => b.id === p.brand_id) || null
     }))
 
     // Filter status
     if (filters?.status) {
-      result = result.filter((p: any) => p.status === filters.status)
+      result = result.filter((p: Product) => p.status === filters.status)
     } else {
-      result = result.filter((p: any) => ['available', 'reserved', 'sold'].includes(p.status))
+      result = result.filter((p: Product) => ['available', 'reserved', 'sold'].includes(p.status))
     }
 
     // Filter Category Slug
     if (filters?.categorySlug) {
-      result = result.filter((p: any) => p.category?.slug === filters.categorySlug)
+      result = result.filter((p: Product) => p.category?.slug === filters.categorySlug)
     }
 
     // Filter Brand Slug
     if (filters?.brandSlug) {
-      result = result.filter((p: any) => p.brand?.slug === filters.brandSlug)
+      result = result.filter((p: Product) => p.brand?.slug === filters.brandSlug)
     }
 
     // Filter Condition
     if (filters?.condition) {
-      result = result.filter((p: any) => p.condition === filters.condition)
+      result = result.filter((p: Product) => p.condition === filters.condition)
     }
 
     // Filter Size
     if (filters?.size) {
-      result = result.filter((p: any) => p.size === filters.size)
+      result = result.filter((p: Product) => p.size === filters.size)
     }
 
     // Filter Prices
     if (filters?.minPrice !== undefined) {
-      result = result.filter((p: any) => p.price >= filters.minPrice!)
+      result = result.filter((p: Product) => p.price >= filters.minPrice!)
     }
     if (filters?.maxPrice !== undefined) {
-      result = result.filter((p: any) => p.price <= filters.maxPrice!)
+      result = result.filter((p: Product) => p.price <= filters.maxPrice!)
     }
 
     // Sorting
     if (filters?.sort === 'price_asc') {
-      result.sort((a: any, b: any) => a.price - b.price)
+      result.sort((a: Product, b: Product) => a.price - b.price)
     } else if (filters?.sort === 'price_desc') {
-      result.sort((a: any, b: any) => b.price - a.price)
+      result.sort((a: Product, b: Product) => b.price - a.price)
     } else {
       // Default: Newest drops
-      result.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      result.sort((a: Product, b: Product) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     }
 
     return result as Product[]
@@ -161,13 +161,13 @@ export async function getProducts(filters?: ProductFilters): Promise<Product[]> 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   if (isMockMode()) {
     const db = readMockDb()
-    const found = db.products.find((p: any) => p.slug === slug)
+    const found = db.products.find((p: Product) => p.slug === slug)
     if (!found) return null
 
     return {
       ...found,
-      category: db.categories.find((c: any) => c.id === found.category_id) || null,
-      brand: db.brands.find((b: any) => b.id === found.brand_id) || null
+      category: db.categories.find((c: Category) => c.id === found.category_id) || null,
+      brand: db.brands.find((b: Brand) => b.id === found.brand_id) || null
     } as Product
   }
 
@@ -195,13 +195,13 @@ export async function getFeaturedProducts(limit = 8): Promise<Product[]> {
   if (isMockMode()) {
     const db = readMockDb()
     const result = db.products
-      .filter((p: any) => p.status === 'available')
-      .map((p: any) => ({
+      .filter((p: Product) => p.status === 'available')
+      .map((p: Product) => ({
         ...p,
-        category: db.categories.find((c: any) => c.id === p.category_id) || null,
-        brand: db.brands.find((b: any) => b.id === p.brand_id) || null
+        category: db.categories.find((c: Category) => c.id === p.category_id) || null,
+        brand: db.brands.find((b: Brand) => b.id === p.brand_id) || null
       }))
-      .sort((a: any, b: any) => b.view_count - a.view_count)
+      .sort((a: Product, b: Product) => b.view_count - a.view_count)
       .slice(0, limit)
 
     return result as Product[]
@@ -232,13 +232,13 @@ export async function getNewArrivals(limit = 8): Promise<Product[]> {
   if (isMockMode()) {
     const db = readMockDb()
     const result = db.products
-      .filter((p: any) => p.status === 'available')
-      .map((p: any) => ({
+      .filter((p: Product) => p.status === 'available')
+      .map((p: Product) => ({
         ...p,
-        category: db.categories.find((c: any) => c.id === p.category_id) || null,
-        brand: db.brands.find((b: any) => b.id === p.brand_id) || null
+        category: db.categories.find((c: Category) => c.id === p.category_id) || null,
+        brand: db.brands.find((b: Brand) => b.id === p.brand_id) || null
       }))
-      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .sort((a: Product, b: Product) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, limit)
 
     return result as Product[]
@@ -276,15 +276,15 @@ export async function getSimilarProducts(
   if (isMockMode()) {
     const db = readMockDb()
     const available = db.products
-      .filter((p: any) => p.status === 'available' && p.category_id === categoryId && p.id !== currentProductId)
-      .map((p: any) => ({
+      .filter((p: Product) => p.status === 'available' && p.category_id === categoryId && p.id !== currentProductId)
+      .map((p: Product) => ({
         ...p,
-        category: db.categories.find((c: any) => c.id === p.category_id) || null,
-        brand: db.brands.find((b: any) => b.id === p.brand_id) || null
+        category: db.categories.find((c: Category) => c.id === p.category_id) || null,
+        brand: db.brands.find((b: Brand) => b.id === p.brand_id) || null
       }))
 
     // First pass: same category AND same size
-    let firstPass = size ? available.filter((p: any) => p.size === size) : available
+    let firstPass = size ? available.filter((p: Product) => p.size === size) : available
     firstPass = firstPass.slice(0, limit)
 
     if (firstPass.length >= limit) {
@@ -292,10 +292,10 @@ export async function getSimilarProducts(
     }
 
     // Second pass: fill up with items in same category regardless of size
-    const excludedIds = [currentProductId, ...firstPass.map((p: any) => p.id)]
+    const excludedIds = [currentProductId, ...firstPass.map((p: Product) => p.id)]
     const remainingLimit = limit - firstPass.length
     const secondPass = available
-      .filter((p: any) => !excludedIds.includes(p.id))
+      .filter((p: Product) => !excludedIds.includes(p.id))
       .slice(0, remainingLimit)
 
     return [...firstPass, ...secondPass] as Product[]
@@ -336,9 +336,7 @@ export async function getSimilarProducts(
   const excludedIds = [currentProductId, ...(firstPass || []).map((p: any) => p.id)]
   const remainingLimit = limit - (firstPass || []).length
 
-  // Build the list of excluded UUIDs formatted as a comma separated string for PostgreSQL 'in' filter
-  const formattedExclusions = excludedIds.map(id => `'${id}'`).join(',')
-
+  // Use proper Supabase parameterized exclusion (no string interpolation)
   const { data: secondPass, error: secondPassError } = await supabase
     .from('products')
     .select(`
@@ -349,7 +347,7 @@ export async function getSimilarProducts(
     `)
     .eq('status', 'available')
     .eq('category_id', categoryId)
-    .filter('id', 'not.in', `(${formattedExclusions})`)
+    .not('id', 'in', `(${excludedIds.join(',')})`)
     .limit(remainingLimit)
 
   if (secondPassError) {
@@ -368,13 +366,13 @@ export async function searchProducts(queryText: string): Promise<Product[]> {
     const term = queryText.toLowerCase()
     
     const result = db.products
-      .filter((p: any) => ['available', 'reserved', 'sold'].includes(p.status))
-      .map((p: any) => ({
+      .filter((p: Product) => ['available', 'reserved', 'sold'].includes(p.status))
+      .map((p: Product) => ({
         ...p,
-        category: db.categories.find((c: any) => c.id === p.category_id) || null,
-        brand: db.brands.find((b: any) => b.id === p.brand_id) || null
+        category: db.categories.find((c: Category) => c.id === p.category_id) || null,
+        brand: db.brands.find((b: Brand) => b.id === p.brand_id) || null
       }))
-      .filter((p: any) => {
+      .filter((p: Product) => {
         return (
           p.title.toLowerCase().includes(term) ||
           (p.description && p.description.toLowerCase().includes(term)) ||

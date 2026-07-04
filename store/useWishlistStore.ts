@@ -12,12 +12,11 @@ interface WishlistItem {
 interface WishlistState {
   items: WishlistItem[];
   toggleItem: (item: WishlistItem) => void;
-  hasItem: (productId: string) => boolean;
 }
 
 export const useWishlistStore = create<WishlistState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       items: [],
       toggleItem: (item) =>
         set((state) => {
@@ -27,9 +26,6 @@ export const useWishlistStore = create<WishlistState>()(
           }
           return { items: [...state.items, item] }
         }),
-      hasItem: (productId) => {
-        return get().items.some((i) => i.product_id === productId)
-      },
     }),
     {
       name: 'thrift-wishlist',

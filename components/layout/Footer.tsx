@@ -51,7 +51,7 @@ export default function Footer() {
             <ul className="space-y-2 text-xs">
               <li>
                 <a
-                  href={`https://wa.me/${whatsappNumber}`}
+                  href={`https://wa.me/${whatsappNumber.replace(/[^+\d]/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-foreground transition-colors font-medium text-foreground/80"

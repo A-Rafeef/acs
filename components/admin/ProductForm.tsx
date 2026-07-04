@@ -225,13 +225,15 @@ export default function ProductForm({ categories, brands, initialData, onSubmitA
   }
 
   const removeImage = (index: number) => {
+    const removedImage = images[index]
     const filtered = images.filter((_, idx) => idx !== index)
-    // Reassign sort order
+    // Reassign sort order and handle primary
+    const hadPrimary = filtered.some((img) => img.is_primary)
     const updated = filtered.map((img, idx) => ({
       ...img,
       sort_order: idx,
-      // If deleted item was primary and we have items left, make first one primary
-      is_primary: img.is_primary ? true : (idx === 0 && !filtered.some(f => f.is_primary) ? true : false)
+      // If the removed image was primary and we have items left, make first one primary
+      is_primary: !hadPrimary && idx === 0 ? true : img.is_primary
     }))
     setImages(updated)
   }

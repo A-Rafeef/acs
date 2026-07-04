@@ -20,7 +20,8 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "**", // Fallback for custom domains/CDNs
+        hostname: "images.unsplash.com",
+        pathname: "/**",
       },
     ],
   },
