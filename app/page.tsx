@@ -1,56 +1,71 @@
-import HeroBanner from '@/components/home/HeroBanner'
+import { Suspense } from 'react'
+import HeroSlider from '@/components/home/HeroSlider'
 import FeaturedCollections from '@/components/home/FeaturedCollections'
-import NewArrivalsCarousel from '@/components/home/NewArrivalsCarousel'
 import BrandStory from '@/components/home/BrandStory'
-import ProductCard from '@/components/shop/ProductCard'
-import { getNewArrivals, getFeaturedProducts } from '@/lib/data/products'
+import DroppingSoon from '@/components/home/DroppingSoon'
+import SizeFilteredSections from '@/components/home/SizeFilteredSections'
+import RecentlyViewed from '@/components/home/RecentlyViewed'
+import { CollectionsSkeleton, CarouselSkeleton, CuratorPicksSkeleton } from '@/components/home/HomeSkeleton'
+import { getNewArrivals, getFeaturedProducts, getDraftProducts } from '@/lib/data/products'
+import { getCategoriesWithProductCount } from '@/lib/data/categories'
 
 export const revalidate = 3600 // Cache homepage for 1 hour
 
-export default async function Home() {
-  const newArrivals = await getNewArrivals(8)
-  const featuredProducts = await getFeaturedProducts(6)
+// --- Async sub-components for Suspense boundaries ---
+
+async function FeaturedCollectionsSection() {
+  const categories = await getCategoriesWithProductCount()
+  return <FeaturedCollections categories={categories} />
+}
+
+async function SizeFilterableProducts() {
+  const [newArrivals, featuredProducts] = await Promise.all([
+    getNewArrivals(8),
+    getFeaturedProducts(6),
+  ])
 
   return (
+    <SizeFilteredSections
+      newArrivals={newArrivals || []}
+      featuredProducts={featuredProducts || []}
+    />
+  )
+}
+
+async function DroppingSoonSection() {
+  const draftProducts = await getDraftProducts(4)
+  if (!draftProducts || draftProducts.length === 0) return null
+  return <DroppingSoon products={draftProducts} />
+}
+
+// --- Main Page ---
+
+export default function Home() {
+  return (
     <div className="w-full pb-16">
-      {/* 1. Hero Banner */}
-      <HeroBanner />
+      {/* 1. Dynamic Hero Slider */}
+      <HeroSlider />
 
       {/* 2. Featured Collections Grid */}
-      <FeaturedCollections />
+      <Suspense fallback={<CollectionsSkeleton />}>
+        <FeaturedCollectionsSection />
+      </Suspense>
 
-      {/* 3. New Arrivals Horizontal Carousel */}
-      {newArrivals && newArrivals.length > 0 ? (
-        <NewArrivalsCarousel products={newArrivals} />
-      ) : (
-        <div className="py-20 bg-secondary/10 text-center text-xs text-foreground/45">
-          No new arrivals listed yet. Check back soon.
-        </div>
-      )}
+      {/* 3. Shop by Size + New Arrivals + Curator's Picks (with real-time size filtering) */}
+      <Suspense fallback={<><CarouselSkeleton /><CuratorPicksSkeleton /></>}>
+        <SizeFilterableProducts />
+      </Suspense>
 
       {/* 4. Brand Story Statement */}
       <BrandStory />
 
-      {/* 5. Curator's Picks Grid Section */}
-      {featuredProducts && featuredProducts.length > 0 && (
-        <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12 border-t border-border/10">
-          <div className="text-center space-y-3">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/45">
-              Handpicked Items
-            </span>
-            <h2 className="text-2xl font-black uppercase tracking-wide">
-              Curator&apos;s Picks
-            </h2>
-            <div className="mx-auto h-[1.5px] w-12 bg-foreground" />
-          </div>
+      {/* 5. Dropping Soon (draft previews + email capture) */}
+      <Suspense fallback={null}>
+        <DroppingSoonSection />
+      </Suspense>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </section>
-      )}
+      {/* 6. Recently Viewed (client-side, from localStorage) */}
+      <RecentlyViewed />
     </div>
   )
 }

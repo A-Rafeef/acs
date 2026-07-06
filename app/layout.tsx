@@ -6,6 +6,8 @@ import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import BagDrawer from '@/components/bag/BagDrawer'
 import CommandPalette from '@/components/search/CommandPalette'
+import WhatsAppFloat from '@/components/layout/WhatsAppFloat'
+import PageTransition from '@/components/providers/PageTransition'
 import { Toaster } from 'sonner'
 
 const geistSans = Geist({
@@ -56,11 +58,14 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-200">
         <ThemeProvider>
           <Header />
-          <main className="flex-grow flex flex-col">{children}</main>
+          <main className="flex-grow flex flex-col">
+            <PageTransition>{children}</PageTransition>
+          </main>
           <Footer />
           <BagDrawer />
           <CommandPalette />
           <Toaster position="bottom-right" />
+          <WhatsAppFloat />
         </ThemeProvider>
       </body>
     </html>

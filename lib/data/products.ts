@@ -408,3 +408,40 @@ export async function searchProducts(queryText: string): Promise<Product[]> {
 
   return data as Product[]
 }
+
+export async function getDraftProducts(limit = 4): Promise<Product[]> {
+  if (isMockMode()) {
+    const db = readMockDb()
+    const result = db.products
+      .filter((p: Product) => p.status === 'draft')
+      .map((p: Product) => ({
+        ...p,
+        category: db.categories.find((c: Category) => c.id === p.category_id) || null,
+        brand: db.brands.find((b: Brand) => b.id === p.brand_id) || null
+      }))
+      .slice(0, limit)
+
+    return result as Product[]
+  }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('products')
+    .select(`
+      *,
+      category:categories(*),
+      brand:brands(*),
+      images:product_images(*)
+    `)
+    .eq('status', 'draft')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error) {
+    console.error('Error fetching draft products:', error)
+    return []
+  }
+
+  return data as Product[]
+}
+

@@ -32,18 +32,22 @@ function LoginForm() {
 
   // Check if mock mode is running
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const isMock = !supabaseUrl || supabaseUrl.includes('your-supabase')
+  const forceMock = process.env.NEXT_PUBLIC_MOCK_MODE === 'true'
+  const isMock = forceMock || !supabaseUrl || supabaseUrl.includes('your-supabase')
 
   const onSubmit = async (values: LoginFormValues) => {
     setLoading(true)
     try {
       if (isMock) {
-        // In local mock mode, allow authentication using ANY valid email format and password
-        document.cookie = 'mock-admin-session=true; path=/; max-age=86400;'
-        toast.success('Authenticated successfully (Mock Dev Bypassed)')
-        const redirectUrl = searchParams.get('next') || '/admin/dashboard'
-        router.push(redirectUrl)
-        router.refresh()
+        if (values.email === 'adilshop@rafi.com' && values.password === 'adilismail.in') {
+          document.cookie = 'mock-admin-session=true; path=/; max-age=86400;'
+          toast.success('Authenticated successfully (Mock Dev Bypassed)')
+          const redirectUrl = searchParams.get('next') || '/admin/dashboard'
+          router.push(redirectUrl)
+          router.refresh()
+        } else {
+          toast.error('Invalid email or password (Mock Mode)')
+        }
         return
       }
 
@@ -95,7 +99,7 @@ function LoginForm() {
           {/* Info note for local testing */}
           {isMock && (
             <div className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-500/10 p-3 rounded-sm leading-relaxed border border-amber-500/20">
-              <strong>Local Mock Mode Active:</strong> You can sign in using any email (e.g. <code>admin@example.com</code>) and any password (minimum 6 characters).
+              <strong>Local Mock Mode Active:</strong> Sign in using <code>adilshop@rafi.com</code> / <code>adilismail.in</code>.
             </div>
           )}
 

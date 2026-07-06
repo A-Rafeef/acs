@@ -6,6 +6,7 @@ import ImageGallery from '@/components/product/ImageGallery'
 import AddToBagButton from '@/components/product/AddToBagButton'
 import WaitlistForm from '@/components/product/WaitlistForm'
 import ViewTracker from '@/components/product/ViewTracker'
+import RecentlyViewedTracker from '@/components/product/RecentlyViewedTracker'
 import ProductCard from '@/components/shop/ProductCard'
 import { type Metadata } from 'next'
 
@@ -88,6 +89,14 @@ export default async function ProductPage({ params }: PageProps) {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 w-full space-y-12">
       {/* View tracking trigger */}
       <ViewTracker productId={product.id} />
+      <RecentlyViewedTracker
+        productId={product.id}
+        slug={product.slug}
+        title={product.title}
+        price={product.price}
+        imageUrl={product.images?.find((img) => img.is_primary)?.url || product.images?.[0]?.url || ''}
+        brandName={product.brand?.name || null}
+      />
 
       {/* JSON-LD injection */}
       <script

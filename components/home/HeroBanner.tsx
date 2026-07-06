@@ -3,11 +3,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, ChevronDown } from 'lucide-react'
 
 export default function HeroBanner() {
   return (
-    <div className="relative h-[85vh] w-full overflow-hidden bg-zinc-950 flex items-center justify-start px-4 sm:px-6 lg:px-12">
+    <div className="relative min-h-[85vh] max-h-[900px] w-full overflow-hidden bg-zinc-950 flex items-center justify-start px-4 sm:px-6 lg:px-12">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -48,11 +48,25 @@ export default function HeroBanner() {
           Curating rare, high-quality, and unique 1-of-1 designer archives and vintage garments for the modern circular wardrobe.
         </motion.p>
 
+        {/* Urgency micro-copy */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
+          className="flex items-center gap-2"
+        >
+          <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[10px] uppercase tracking-widest text-zinc-400 font-medium">
+            Updated daily · Every piece is 1-of-1
+          </span>
+        </motion.div>
+
+        {/* Dual CTAs */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
-          className="pt-2"
+          className="pt-2 flex flex-wrap gap-3"
         >
           <Link
             href="/shop"
@@ -60,6 +74,13 @@ export default function HeroBanner() {
           >
             Shop the Collection
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+          <Link
+            href="#new-arrivals"
+            className="group inline-flex items-center gap-2 bg-transparent text-white border border-white/30 hover:border-white/60 hover:bg-white/10 text-xs font-bold uppercase tracking-widest px-8 py-4 transition-all duration-300 rounded-sm"
+          >
+            New Arrivals
+            <ChevronDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
           </Link>
         </motion.div>
       </div>
@@ -70,7 +91,7 @@ export default function HeroBanner() {
         <motion.div
           animate={{ y: [0, 6, 0] }}
           transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-          className="h-4 w-0.5 bg-white/40"
+          className="h-5 w-0.5 bg-white/40 rounded-full"
         />
       </div>
     </div>

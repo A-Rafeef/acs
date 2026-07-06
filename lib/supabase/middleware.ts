@@ -10,7 +10,8 @@ export async function updateSession(request: NextRequest) {
 
   // 1. Check if mock mode is triggered
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const isMock = !supabaseUrl || supabaseUrl.includes('your-supabase')
+  const forceMock = process.env.NEXT_PUBLIC_MOCK_MODE === 'true'
+  const isMock = forceMock || !supabaseUrl || supabaseUrl.includes('your-supabase')
 
   if (isMock) {
     const mockSession = request.cookies.get('mock-admin-session')?.value

@@ -5,7 +5,8 @@ const MOCK_DB_PATH = path.join(process.cwd(), 'lib', 'data', 'mock-db.json')
 
 export function isMockMode() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  return !url || url.includes('your-supabase')
+  const forceMock = process.env.NEXT_PUBLIC_MOCK_MODE === 'true'
+  return forceMock || !url || url.includes('your-supabase')
 }
 
 export function readMockDb() {

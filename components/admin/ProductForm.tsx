@@ -49,7 +49,8 @@ export default function ProductForm({ categories, brands, initialData, onSubmitA
   const [submitting, setSubmitting] = useState(false)
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const isMock = !supabaseUrl || supabaseUrl.includes('your-supabase')
+  const forceMock = process.env.NEXT_PUBLIC_MOCK_MODE === 'true'
+  const isMock = forceMock || !supabaseUrl || supabaseUrl.includes('your-supabase')
 
   const {
     register,

@@ -167,6 +167,100 @@
           "is_primary": true
         }
       ]
+    },
+    {
+      "id": "prod-draft-1",
+      "title": "Unreleased Distressed Knit Sweater",
+      "slug": "unreleased-distressed-knit-sweater",
+      "description": "Draft product details for dropping soon section.",
+      "price": 48000,
+      "category_id": "cat-tops",
+      "brand_id": "br-vintage",
+      "condition": "excellent",
+      "size": "M",
+      "color": "Gray",
+      "status": "draft",
+      "view_count": 0,
+      "sold_at": null,
+      "archived_at": null,
+      "created_at": "2026-07-05T09:00:00.000Z",
+      "updated_at": "2026-07-05T09:00:00.000Z",
+      "images": [
+        {
+          "id": "img-d-1",
+          "product_id": "prod-draft-1",
+          "url": "https://images.unsplash.com/photo-1574169208507-84376144848b?auto=format&fit=crop&q=80&w=600",
+          "r2_key": "products/mock-d-1.webp",
+          "sort_order": 0,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "prod-draft-2",
+      "title": "Archival Utility Cargo Pants",
+      "slug": "archival-utility-cargo-pants",
+      "description": "Draft product details for dropping soon section.",
+      "price": 72000,
+      "category_id": "cat-bottoms",
+      "brand_id": "br-vintage",
+      "condition": "excellent",
+      "size": "L",
+      "color": "Olive",
+      "status": "draft",
+      "view_count": 0,
+      "sold_at": null,
+      "archived_at": null,
+      "created_at": "2026-07-05T10:00:00.000Z",
+      "updated_at": "2026-07-05T10:00:00.000Z",
+      "images": [
+        {
+          "id": "img-d-2",
+          "product_id": "prod-draft-2",
+          "url": "https://images.unsplash.com/photo-1517462964-21fdcec3f25b?auto=format&fit=crop&q=80&w=600",
+          "r2_key": "products/mock-d-2.webp",
+          "sort_order": 0,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "prod-4905f2ea-7956-4e3c-8309-d191064fc4c8",
+      "title": "jlnkjnk",
+      "slug": "jlnkjnk",
+      "description": "knkj k",
+      "price": 97,
+      "category_id": "cat-outerwear",
+      "brand_id": "br-prada",
+      "condition": "excellent",
+      "size": "g",
+      "color": "kn",
+      "status": "available",
+      "view_count": 0,
+      "sold_at": null,
+      "archived_at": null,
+      "created_at": "2026-07-06T06:39:13.164Z",
+      "updated_at": "2026-07-06T06:39:13.165Z",
+      "images": [
+        {
+          "id": "img-69e7b0a7-3b12-4a0b-88cd-7936eab58025",
+          "product_id": "prod-4905f2ea-7956-4e3c-8309-d191064fc4c8",
+          "url": "blob:http://localhost:3000/f9a03715-4d31-418c-84d8-56fdaf25b753",
+          "r2_key": "mock-r2/f0f9c8e6-2f66-4f88-94a7-1f89f3c2bbca-ChatGPT Image Jun 30, 2026, 09_06_55 AM.png",
+          "sort_order": 0,
+          "is_primary": true,
+          "created_at": "2026-07-06T06:39:13.165Z"
+        },
+        {
+          "id": "img-b8305079-d110-4ccf-93fd-ea45252d68c6",
+          "product_id": "prod-4905f2ea-7956-4e3c-8309-d191064fc4c8",
+          "url": "blob:http://localhost:3000/416861fc-9f81-4bcf-b2e9-b65acc1be34c",
+          "r2_key": "mock-r2/4ce9a8c2-22b5-4feb-8cb8-68fbb29c7d2c-high_quality_cutout_portrait_of_a_professional_executive_man_in_a_sharp_navy.png",
+          "sort_order": 1,
+          "is_primary": false,
+          "created_at": "2026-07-06T06:39:13.165Z"
+        }
+      ]
     }
   ],
   "waitlist": []
