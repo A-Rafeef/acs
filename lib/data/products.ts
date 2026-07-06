@@ -48,7 +48,8 @@ export async function getProducts(filters?: ProductFilters): Promise<Product[]> 
 
     // Filter Size
     if (filters?.size) {
-      result = result.filter((p: Product) => p.size === filters.size)
+      const sizeFilter = filters.size.toUpperCase()
+      result = result.filter((p: Product) => p.size?.toUpperCase() === sizeFilter)
     }
 
     // Filter Prices

@@ -1,6 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { type Category, type Product } from '@/types'
-import { isMockMode, readMockDb } from './mock-engine'
+import { isMockMode, readMockDb, writeMockDb } from './mock-engine'
 
 export interface CategoryWithCount extends Category {
   product_count: number;
@@ -91,4 +91,50 @@ export async function getCategoriesWithProductCount(): Promise<CategoryWithCount
   }
 
   return result.sort((a, b) => b.product_count - a.product_count)
+}
+
+export async function createCategory(
+  name: string,
+  description?: string | null
+): Promise<{ data: Category | null; error: string | null }> {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9 -]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+  
+  const now = new Date().toISOString()
+
+  if (isMockMode()) {
+    const db = readMockDb()
+    const duplicate = db.categories.find((c: any) => c.slug === slug || c.name.toLowerCase() === name.toLowerCase())
+    if (duplicate) {
+      return { data: null, error: 'Category already exists' }
+    }
+
+    const newCategory: Category = {
+      id: `cat-${crypto.randomUUID()}`,
+      name,
+      slug,
+      description: description || null,
+      created_at: now
+    }
+
+    db.categories.push(newCategory)
+    writeMockDb(db)
+    return { data: newCategory, error: null }
+  }
+
+  const supabase = await createAdminClient()
+  const { data, error } = await supabase
+    .from('categories')
+    .insert({ name, slug, description: description || null })
+    .select()
+    .single()
+
+  if (error) {
+    return { data: null, error: error.message }
+  }
+
+  return { data: data as Category, error: null }
 }

@@ -18,12 +18,12 @@ export default function SizeFilteredSections({ newArrivals, featuredProducts }: 
 
   const filteredArrivals = useMemo(() => {
     if (!sizeFilter) return newArrivals
-    return newArrivals.filter((p) => p.size === sizeFilter)
+    return newArrivals.filter((p) => p.size?.toUpperCase() === sizeFilter.toUpperCase())
   }, [newArrivals, sizeFilter])
 
   const filteredPicks = useMemo(() => {
     if (!sizeFilter) return featuredProducts
-    return featuredProducts.filter((p) => p.size === sizeFilter)
+    return featuredProducts.filter((p) => p.size?.toUpperCase() === sizeFilter.toUpperCase())
   }, [featuredProducts, sizeFilter])
 
   return (

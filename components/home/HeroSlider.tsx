@@ -87,12 +87,15 @@ export default function HeroSlider({ slides = defaultSlides, autoPlayInterval = 
 
   // Auto-play
   useEffect(() => {
-    if (isPaused || slideCount <= 1) return
-    timerRef.current = setInterval(goNext, autoPlayInterval)
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
-  }, [isPaused, goNext, autoPlayInterval, slideCount])
+    if (slideCount <= 1) return
+    
+    const interval = setInterval(() => {
+      setDirection(1)
+      setCurrentIndex((prev) => (prev + 1) % slideCount)
+    }, autoPlayInterval)
+    
+    return () => clearInterval(interval)
+  }, [slideCount, autoPlayInterval])
 
   const currentSlide = slides[currentIndex]
 
@@ -127,9 +130,7 @@ export default function HeroSlider({ slides = defaultSlides, autoPlayInterval = 
 
   return (
     <div
-      className="relative min-h-[85vh] max-h-[900px] w-full overflow-hidden bg-zinc-950"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
+      className="relative aspect-[16/9] w-full overflow-hidden bg-zinc-950"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -158,8 +159,8 @@ export default function HeroSlider({ slides = defaultSlides, autoPlayInterval = 
       </AnimatePresence>
 
       {/* Text Content */}
-      <div className="relative z-10 min-h-[85vh] max-h-[900px] flex items-center justify-start px-4 sm:px-6 lg:px-12">
-        <div className="max-w-2xl text-left text-white space-y-6">
+      <div className="absolute inset-0 z-10 flex items-center justify-start px-6 sm:px-6 lg:px-12">
+        <div className="max-w-2xl text-left text-white space-y-1.5 sm:space-y-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={`text-${currentSlide.id}`}
@@ -167,12 +168,12 @@ export default function HeroSlider({ slides = defaultSlides, autoPlayInterval = 
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
-              className="space-y-4"
+              className="space-y-0.5 sm:space-y-4"
             >
-              <span className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-300">
+              <span className="text-[8px] sm:text-xs font-bold uppercase tracking-[0.25em] text-zinc-300">
                 {currentSlide.subtitle}
               </span>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight leading-[1.05] font-sans">
+              <h1 className="text-sm sm:text-4xl lg:text-5xl xl:text-6xl font-black uppercase tracking-tight leading-[1.05] font-sans">
                 {currentSlide.titleLine1} <br />
                 <span className="text-zinc-400">{currentSlide.titleLine2}</span>
               </h1>
@@ -186,16 +187,16 @@ export default function HeroSlider({ slides = defaultSlides, autoPlayInterval = 
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
-              className="text-sm sm:text-base leading-relaxed text-zinc-300 max-w-lg font-light"
+              className="hidden sm:block text-xs sm:text-sm lg:text-base leading-relaxed text-zinc-300 max-w-xs sm:max-w-lg font-light"
             >
               {currentSlide.description}
             </motion.p>
           </AnimatePresence>
 
           {/* Urgency micro-copy */}
-          <div className="flex items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[10px] uppercase tracking-widest text-zinc-400 font-medium">
+          <div className="hidden sm:flex items-center gap-2">
+            <span className="inline-block h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[8px] sm:text-[10px] uppercase tracking-widest text-zinc-400 font-medium">
               Updated daily · Every piece is 1-of-1
             </span>
           </div>
@@ -208,22 +209,22 @@ export default function HeroSlider({ slides = defaultSlides, autoPlayInterval = 
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
-              className="pt-2 flex flex-wrap gap-3"
+              className="pt-0.5 sm:pt-2 flex flex-wrap gap-2 sm:gap-3"
             >
               <Link
                 href={currentSlide.ctaHref}
-                className="group inline-flex items-center gap-2 bg-white text-zinc-950 hover:bg-zinc-200 text-xs font-bold uppercase tracking-widest px-8 py-4 transition-all duration-300 rounded-sm shadow-md"
+                className="group inline-flex items-center gap-1 bg-white text-zinc-950 hover:bg-zinc-200 text-[8px] sm:text-xs font-bold uppercase tracking-widest px-3 py-1.5 sm:px-8 sm:py-4 transition-all duration-300 rounded-sm shadow-md"
               >
                 {currentSlide.ctaText}
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 transition-transform group-hover:translate-x-1" />
               </Link>
               {currentSlide.secondaryCtaText && currentSlide.secondaryCtaHref && (
                 <Link
                   href={currentSlide.secondaryCtaHref}
-                  className="group inline-flex items-center gap-2 bg-transparent text-white border border-white/30 hover:border-white/60 hover:bg-white/10 text-xs font-bold uppercase tracking-widest px-8 py-4 transition-all duration-300 rounded-sm"
+                  className="group inline-flex items-center gap-1 bg-transparent text-white border border-white/30 hover:border-white/60 hover:bg-white/10 text-[8px] sm:text-xs font-bold uppercase tracking-widest px-3 py-1.5 sm:px-8 sm:py-4 transition-all duration-300 rounded-sm"
                 >
                   {currentSlide.secondaryCtaText}
-                  <ChevronDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
+                  <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 transition-transform group-hover:translate-y-0.5" />
                 </Link>
               )}
             </motion.div>
@@ -236,14 +237,14 @@ export default function HeroSlider({ slides = defaultSlides, autoPlayInterval = 
         <>
           <button
             onClick={goPrev}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-white/10 backdrop-blur-sm text-white/70 hover:bg-white/20 hover:text-white transition-all border border-white/10"
+            className="hidden sm:block absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-white/10 backdrop-blur-sm text-white/70 hover:bg-white/20 hover:text-white transition-all border border-white/10"
             aria-label="Previous slide"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           <button
             onClick={goNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-white/10 backdrop-blur-sm text-white/70 hover:bg-white/20 hover:text-white transition-all border border-white/10"
+            className="hidden sm:block absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-white/10 backdrop-blur-sm text-white/70 hover:bg-white/20 hover:text-white transition-all border border-white/10"
             aria-label="Next slide"
           >
             <ChevronRight className="h-5 w-5" />
@@ -253,12 +254,12 @@ export default function HeroSlider({ slides = defaultSlides, autoPlayInterval = 
 
       {/* Dot Indicators + Progress */}
       {slideCount > 1 && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+        <div className="absolute bottom-3 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
           {slides.map((slide, idx) => (
             <button
               key={slide.id}
               onClick={() => goToSlide(idx)}
-              className="relative h-2 rounded-full transition-all duration-500 overflow-hidden"
+              className="relative h-1.5 sm:h-2 rounded-full transition-all duration-500 overflow-hidden"
               style={{ width: idx === currentIndex ? 32 : 8 }}
               aria-label={`Go to slide ${idx + 1}`}
             >
