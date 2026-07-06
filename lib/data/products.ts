@@ -128,7 +128,7 @@ export async function getProducts(filters?: ProductFilters): Promise<Product[]> 
 
   // Filter size
   if (filters?.size) {
-    query = query.eq('size', filters.size)
+    query = query.ilike('size', filters.size)
   }
 
   // Price range
