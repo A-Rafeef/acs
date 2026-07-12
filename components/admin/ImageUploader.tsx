@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Upload, X, Star, ArrowUp, ArrowDown, Camera, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import Image from 'next/image'
@@ -30,6 +30,15 @@ export default function ImageUploader({ images, onChange }: ImageUploaderProps) 
   const [capturing, setCapturing] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const mediaStreamRef = useRef<MediaStream | null>(null)
+
+  // Clean up camera stream if component unmounts while modal is active
+  useEffect(() => {
+    return () => {
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop())
+      }
+    }
+  }, [])
 
   // Compress helper
   const compressImage = async (file: File): Promise<File> => {
