@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Minimalist Thrift Store | 1-of-1 Curated Sustainable Fashion',
+  title: 'ACS | 1-of-1 Curated Sustainable Fashion',
   description: 'Shop premium curated second-hand pieces. Fast WhatsApp checkout, unique 1-of-1 inventory logic, sustainable fashion.',
 }
 

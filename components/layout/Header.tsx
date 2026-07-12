@@ -56,8 +56,12 @@ export default function Header() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
           <div className="flex lg:flex-1">
-            <Link href="/" className="text-xl font-bold tracking-widest text-foreground hover:opacity-80 transition-opacity">
-              MINIMALIST
+            <Link href="/" className="hover:opacity-80 transition-opacity flex items-center">
+              <img
+                src="/logo.png"
+                alt="ACS Logo"
+                className="h-8 w-auto object-contain invert dark:invert-0 transition-all"
+              />
             </Link>
           </div>
 

@@ -25,7 +25,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
             <div>
               <h2 className="text-sm font-black uppercase tracking-wider">Store Admin</h2>
               <span className="text-[9px] font-bold text-foreground/45 uppercase tracking-widest">
-                Minimalist Control
+                ACS Control
               </span>
             </div>
             <Link

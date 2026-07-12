@@ -82,7 +82,7 @@ export default async function AdminDashboard() {
             Dashboard
           </h1>
           <p className="text-[10px] text-foreground/45 uppercase tracking-widest font-bold">
-            Real-time status overview of Minimalist Thrift
+            Real-time status overview of ACS
           </p>
         </div>
         <div>
