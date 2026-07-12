@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Upload, X, Star, ArrowUp, ArrowDown } from 'lucide-react'
+import { Upload, X, Star, ArrowUp, ArrowDown, Camera, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import Image from 'next/image'
+import imageCompression from 'browser-image-compression'
 
 interface UploadedImage {
   url: string
@@ -21,9 +22,32 @@ interface ImageUploaderProps {
 export default function ImageUploader({ images, onChange }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+
+  // Viewfinder Camera Modal State
+  const [showCameraModal, setShowCameraModal] = useState(false)
+  const [cameraLoading, setCameraLoading] = useState(false)
+  const [capturing, setCapturing] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const mediaStreamRef = useRef<MediaStream | null>(null)
+
+  // Compress helper
+  const compressImage = async (file: File): Promise<File> => {
+    if (!file.type.startsWith('image/')) return file
+    try {
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true
+      }
+      return await imageCompression(file, options)
+    } catch (err) {
+      console.warn('Compression failed, using original file:', err)
+      return file
+    }
+  }
 
   const processFile = async (file: File): Promise<UploadedImage> => {
-    // 1. Ask API for signature/upload info
     const signatureRes = await fetch('/api/admin/upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -37,7 +61,6 @@ export default function ImageUploader({ images, onChange }: ImageUploaderProps) 
     const { uploadUrl, fileUrl, r2Key, isMock } = await signatureRes.json()
 
     if (isMock) {
-      // Mock mode fallback: convert file to Base64 data URL so they can see their actual uploaded image
       return new Promise((resolve, reject) => {
         const reader = new FileReader()
         reader.readAsDataURL(file)
@@ -53,7 +76,6 @@ export default function ImageUploader({ images, onChange }: ImageUploaderProps) 
       })
     }
 
-    // Production R2 upload using presigned PUT URL
     const uploadRes = await fetch(uploadUrl, {
       method: 'PUT',
       headers: { 'Content-Type': file.type },
@@ -77,13 +99,18 @@ export default function ImageUploader({ images, onChange }: ImageUploaderProps) 
     if (files.length === 0) return
 
     setUploading(true)
-    const toastId = toast.loading(`Uploading ${files.length} image(s)...`)
+    const toastId = toast.loading(`Processing and uploading ${files.length} image(s)...`)
 
     try {
-      const uploadPromises = files.map((file) => processFile(file))
+      const compressedFiles = await Promise.all(
+        files.map(async (file) => {
+          return await compressImage(file)
+        })
+      )
+
+      const uploadPromises = compressedFiles.map((file) => processFile(file))
       const newImages = await Promise.all(uploadPromises)
 
-      // Merge and update sort orders
       const updated = [...images, ...newImages].map((img, idx) => ({
         ...img,
         sort_order: idx,
@@ -98,6 +125,83 @@ export default function ImageUploader({ images, onChange }: ImageUploaderProps) 
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
+      if (cameraInputRef.current) cameraInputRef.current.value = ''
+    }
+  }
+
+  // Multi-shot In-App Camera functions
+  const openInAppCamera = async () => {
+    setCameraLoading(true)
+    setShowCameraModal(true)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false
+      })
+      mediaStreamRef.current = stream
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        await videoRef.current.play()
+      }
+    } catch (err: any) {
+      console.error('Error starting camera stream:', err)
+      toast.error('Failed to open camera: ' + (err.message || 'Permission denied'))
+      closeInAppCamera()
+    } finally {
+      setCameraLoading(false)
+    }
+  }
+
+  const closeInAppCamera = () => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop())
+      mediaStreamRef.current = null
+    }
+    setShowCameraModal(false)
+  }
+
+  const capturePhoto = async () => {
+    if (!videoRef.current || capturing) return
+    setCapturing(true)
+    
+    try {
+      const video = videoRef.current
+      const canvas = document.createElement('canvas')
+      canvas.width = video.videoWidth || 1280
+      canvas.height = video.videoHeight || 720
+      
+      const ctx = canvas.getContext('2d')
+      if (!ctx) throw new Error('Could not instantiate canvas context')
+      
+      // Draw frame to canvas
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+      
+      // Convert to file
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.88))
+      if (!blob) throw new Error('Blob creation failed')
+      
+      const file = new File([blob], `snap-${Date.now()}.jpg`, { type: 'image/jpeg' })
+      
+      // Compress
+      const compressed = await compressImage(file)
+      
+      // Upload
+      const newImg = await processFile(compressed)
+      
+      // Update state
+      const updated = [...images, newImg].map((img, idx) => ({
+        ...img,
+        sort_order: idx,
+        is_primary: idx === 0 ? true : img.is_primary
+      }))
+      
+      onChange(updated)
+      toast.success('Snap uploaded successfully')
+    } catch (err: any) {
+      console.error(err)
+      toast.error('Capture failed: ' + err.message)
+    } finally {
+      setCapturing(false)
     }
   }
 
@@ -129,7 +233,6 @@ export default function ImageUploader({ images, onChange }: ImageUploaderProps) 
     updated[index] = updated[targetIndex]
     updated[targetIndex] = temp
 
-    // Re-assign sort orders
     const final = updated.map((img, idx) => ({
       ...img,
       sort_order: idx,
@@ -176,7 +279,6 @@ export default function ImageUploader({ images, onChange }: ImageUploaderProps) 
               {/* Action Toolbar */}
               <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
                 <div className="flex items-center justify-between">
-                  {/* Sorting actions */}
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
@@ -205,7 +307,6 @@ export default function ImageUploader({ images, onChange }: ImageUploaderProps) 
                   </button>
                 </div>
 
-                {/* Cover Selector */}
                 {!img.is_primary && (
                   <button
                     type="button"
@@ -221,33 +322,155 @@ export default function ImageUploader({ images, onChange }: ImageUploaderProps) 
         </div>
       )}
 
-      {/* Upload Drag/Click Zone */}
-      <div
-        onClick={() => fileInputRef.current?.click()}
-        className={`border border-dashed border-border/40 hover:border-foreground/40 bg-secondary/5 hover:bg-secondary/15 py-8 px-6 rounded-sm text-center cursor-pointer transition-all ${
-          uploading ? 'pointer-events-none opacity-50' : ''
-        }`}
-      >
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          multiple
-          accept="image/*"
-          className="hidden"
-        />
-        <div className="flex flex-col items-center justify-center gap-2">
-          <Upload className="h-6 w-6 text-foreground/40" />
+      {/* Upload Drag/Click Zone Split */}
+      <div className={`grid grid-cols-1 sm:grid-cols-3 gap-4 ${uploading ? 'pointer-events-none opacity-50' : ''}`}>
+        
+        {/* 1. Browse Gallery */}
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          className="border border-dashed border-border/40 hover:border-foreground/40 bg-secondary/5 hover:bg-secondary/15 py-6 px-4 rounded-sm text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2"
+        >
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            multiple
+            accept="image/*"
+            className="hidden"
+          />
+          <Upload className="h-5 w-5 text-foreground/40" />
           <div className="space-y-0.5">
             <p className="text-xs font-bold uppercase tracking-wider text-foreground">
-              {uploading ? 'Uploading...' : 'Select product photos'}
+              Browse Gallery
             </p>
-            <p className="text-[9px] text-foreground/45 uppercase tracking-widest font-semibold">
-              Supports JPG, PNG, WEBP. Drag and drop reordering.
+            <p className="text-[8px] text-foreground/45 uppercase tracking-widest font-semibold">
+              Select multiple photos
             </p>
           </div>
         </div>
+
+        {/* 2. Take Photo (Native camera capture) */}
+        <div
+          onClick={() => cameraInputRef.current?.click()}
+          className="border border-dashed border-border/40 hover:border-foreground/40 bg-secondary/5 hover:bg-secondary/15 py-6 px-4 rounded-sm text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2"
+        >
+          <input
+            type="file"
+            ref={cameraInputRef}
+            onChange={handleFileChange}
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+          />
+          <Camera className="h-5 w-5 text-foreground/40" />
+          <div className="space-y-0.5">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
+              Take Photo
+            </p>
+            <p className="text-[8px] text-foreground/45 uppercase tracking-widest font-semibold">
+              Direct device camera
+            </p>
+          </div>
+        </div>
+
+        {/* 3. Multi-shot custom camera viewfinder */}
+        <button
+          type="button"
+          onClick={openInAppCamera}
+          className="border border-dashed border-border/40 hover:border-foreground/40 bg-secondary/5 hover:bg-secondary/15 py-6 px-4 rounded-sm text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 text-left"
+        >
+          <div className="relative">
+            <Camera className="h-5 w-5 text-foreground/40" />
+            <span className="absolute -top-1 -right-2 flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500"></span>
+            </span>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
+              Multi-Shot Camera
+            </p>
+            <p className="text-[8px] text-foreground/45 uppercase tracking-widest font-semibold">
+              Live sequential capture
+            </p>
+          </div>
+        </button>
       </div>
+
+      {/* In-App Camera Viewfinder Modal */}
+      {showCameraModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 backdrop-blur-md transition-all">
+          <div className="relative flex flex-col w-full max-w-2xl bg-secondary/10 border border-border/25 rounded-md overflow-hidden shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border/20 px-6 py-4 bg-background/40">
+              <div className="flex items-center gap-2">
+                <Camera className="h-4 w-4 text-foreground/70" />
+                <span className="text-xs font-bold uppercase tracking-wider">Multi-Shot Viewfinder</span>
+              </div>
+              <button
+                type="button"
+                onClick={closeInAppCamera}
+                className="p-1 rounded-full hover:bg-secondary/40 text-foreground/60 hover:text-foreground transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Viewfinder Window */}
+            <div className="relative aspect-[4/3] bg-black flex items-center justify-center overflow-hidden">
+              {cameraLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-foreground/65">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">Waking camera device...</span>
+                </div>
+              )}
+              
+              <video
+                ref={videoRef}
+                playsInline
+                muted
+                className="w-full h-full object-cover transform scale-x-[-1] sm:scale-x-1" 
+              />
+
+              {capturing && (
+                <div className="absolute inset-0 bg-white/20 animate-pulse flex items-center justify-center">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-background bg-foreground px-3 py-1.5 rounded-sm">Processing Snap...</span>
+                </div>
+              )}
+            </div>
+
+            {/* Footer Control Panel */}
+            <div className="flex items-center justify-between border-t border-border/20 px-6 py-5 bg-background/40">
+              <div className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider">
+                Captured: <span className="text-foreground">{images.length}</span>
+              </div>
+
+              {/* Shutter Button */}
+              <button
+                type="button"
+                disabled={cameraLoading || capturing}
+                onClick={capturePhoto}
+                className="h-14 w-14 rounded-full border-4 border-foreground/30 hover:border-foreground/55 flex items-center justify-center bg-foreground text-background transition-all transform hover:scale-105 active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                title="Capture Photo"
+              >
+                {capturing ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-background" />
+                ) : (
+                  <span className="h-9 w-9 rounded-full bg-foreground border border-background" />
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={closeInAppCamera}
+                className="px-4 py-2 bg-foreground text-background text-xs font-bold uppercase tracking-widest hover:bg-foreground/80 transition-colors rounded-sm cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

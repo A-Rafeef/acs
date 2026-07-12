@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
-import { DeleteObjectCommand } from '@aws-sdk/client-s3'
-import { r2Client } from '@/lib/r2/client'
 import { isMockMode, readMockDb, writeMockDb } from '@/lib/data/mock-engine'
 
 export const revalidate = 0 // Do not cache API endpoints
@@ -91,19 +89,16 @@ export async function GET(request: Request) {
       })
     })
 
-    // Delete media from Cloudflare R2 via S3-compatible API
+    // Delete media from Supabase Storage
     if (r2Keys.length > 0) {
-      const deletePromises = r2Keys.map((key) =>
-        r2Client.send(
-          new DeleteObjectCommand({
-            Bucket: process.env.R2_BUCKET_NAME,
-            Key: key,
-          })
-        ).catch((err) => {
-          console.error(`Failed to delete R2 object ${key}:`, err)
-        })
-      )
-      await Promise.allSettled(deletePromises)
+      const bucketName = process.env.SUPABASE_STORAGE_BUCKET || 'product-images'
+      const { error: storageDeleteError } = await supabase.storage
+        .from(bucketName)
+        .remove(r2Keys)
+
+      if (storageDeleteError) {
+        console.error('Failed to delete storage images:', storageDeleteError)
+      }
 
       // Delete database reference rows since the source media is purged
       const { error: imgCleanError } = await supabase
@@ -138,3 +133,4 @@ export async function GET(request: Request) {
     )
   }
 }
+

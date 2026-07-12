@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
-import { PutObjectCommand } from '@aws-sdk/client-s3'
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { r2Client } from '@/lib/r2/client'
+import { createClient } from '@/lib/supabase/server'
 import { isAdminAuthenticated } from '@/lib/auth'
 import { isMockMode } from '@/lib/data/mock-engine'
 
@@ -21,8 +19,8 @@ export async function POST(request: Request) {
 
     const fileKey = `products/${crypto.randomUUID()}-${filename}`
 
-    if (isMockMode() || !process.env.R2_BUCKET_NAME || !process.env.R2_ACCOUNT_ID) {
-      // In mock mode or if R2 is not fully configured, return mock credentials/uploadUrl
+    if (isMockMode()) {
+      // In mock mode, return mock credentials/uploadUrl
       return NextResponse.json({
         uploadUrl: '/api/admin/upload/mock',
         fileUrl: `https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=600`, // Default fashion image
@@ -31,18 +29,25 @@ export async function POST(request: Request) {
       })
     }
 
-    const command = new PutObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME,
-      Key: fileKey,
-      ContentType: contentType,
-    })
+    const supabase = await createClient()
+    const bucketName = process.env.SUPABASE_STORAGE_BUCKET || 'product-images'
 
-    const uploadUrl = await getSignedUrl(r2Client, command, { expiresIn: 3600 })
-    const fileUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${fileKey}`
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .createSignedUploadUrl(fileKey)
+
+    if (error) {
+      console.error('Supabase signed URL error:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(fileKey)
 
     return NextResponse.json({
-      uploadUrl,
-      fileUrl,
+      uploadUrl: data.signedUrl,
+      fileUrl: publicUrlData.publicUrl,
       r2Key: fileKey,
       isMock: false
     })
@@ -51,3 +56,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 })
   }
 }
+
