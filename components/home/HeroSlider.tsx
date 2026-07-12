@@ -63,12 +63,13 @@ interface HeroSliderProps {
 }
 
 export default function HeroSlider({ slides = defaultSlides, autoPlayInterval = 6000 }: HeroSliderProps) {
+  const slidesToRender = !slides || slides.length === 0 ? defaultSlides : slides
   const [currentIndex, setCurrentIndex] = useState(0)
   const [direction, setDirection] = useState(0) // -1 for left, 1 for right
   const [isPaused, setIsPaused] = useState(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
-  const slideCount = slides.length
+  const slideCount = slidesToRender.length
 
   const goToSlide = useCallback((index: number, dir?: number) => {
     setDirection(dir ?? (index > currentIndex ? 1 : -1))
@@ -97,7 +98,7 @@ export default function HeroSlider({ slides = defaultSlides, autoPlayInterval = 
     return () => clearInterval(interval)
   }, [slideCount, autoPlayInterval])
 
-  const currentSlide = slides[currentIndex]
+  const currentSlide = slidesToRender[currentIndex]
 
   // Swipe support
   const touchStartX = useRef(0)
@@ -255,7 +256,7 @@ export default function HeroSlider({ slides = defaultSlides, autoPlayInterval = 
       {/* Dot Indicators + Progress */}
       {slideCount > 1 && (
         <div className="absolute bottom-3 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
-          {slides.map((slide, idx) => (
+          {slidesToRender.map((slide, idx) => (
             <button
               key={slide.id}
               onClick={() => goToSlide(idx)}
